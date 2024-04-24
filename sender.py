@@ -45,14 +45,11 @@ def send_to_receiver(RECEIVER_IP: str, RECEIVER_PORT: int):
                 sock.sendto(sequence_number + chunk.tobytes(), (RECEIVER_IP, RECEIVER_PORT))
 
             time.sleep(0.05)
-
-    except KeyboardInterrupt:
+    finally:
+        sock.close()
         cap.release()
         cv2.destroyAllWindows()
     
-    finally:
-        sock.close()
-
 def main():
     listener_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
     listener_socket.bind((LISTENER_IP, LISTENER_PORT))
