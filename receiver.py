@@ -1,32 +1,45 @@
 import socket
 import numpy as np
-import time
 import cv2
-import heapq
+import logging
+import sys as sus
+import datetime
+import time
 
-UDP_IP="127.0.0.1"
+logging.basicConfig(
+    filename=f"./tmp/{datetime.datetime.now()}-receiver.log",
+    level=logging.DEBUG,
+    format="%(asctime)s %(levelname)s %(name)s %(lineno)d %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+UDP_IP = "127.0.0.1"
 UDP_PORT = 9999
-CHUNK_SIZE = 46080  # size of each chunk
-NUM_CHUNKS = 20
+CHUNK_SIZE = 46080 # 576  # size of each chunk
+NUM_CHUNKS = 20 # 1600
 
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((UDP_IP, UDP_PORT))
 
-data_sequence = []
+dummy_chunk = np.zeros(CHUNK_SIZE, dtype=np.uint8)
+data_sequence = np.zeros(CHUNK_SIZE * NUM_CHUNKS, dtype=np.uint8)
 
 while True:
-    data, addr = sock.recvfrom(46082)
-    sequence_number = int.from_bytes(data[0:2], "big")
-    frame_data = data[2:]
-    heapq.heappush(data_sequence, (sequence_number, frame_data))
-    if len(data_sequence) == NUM_CHUNKS:
-        # sorted_chunks = sorted(data_sequence, key=lambda x: x[0])
-        frame = np.concatenate([np.frombuffer(chunk[1], dtype=np.uint8) for chunk in data_sequence])
-        frame = frame.reshape(480,640,3)
-        cv2.imshow('receiver', frame)
+    try:
+        data, addr = sock.recvfrom(CHUNK_SIZE + 3)
+        sequence_number = int.from_bytes(data[0:3], "big")
+        frame_data = data[3:]
+        data_sequence[
+            sequence_number * CHUNK_SIZE : (sequence_number + 1) * CHUNK_SIZE
+        ] = (np.frombuffer(frame_data, dtype=np.uint8))
+        frame = data_sequence.reshape(480, 640, 3)
+        cv2.imshow("receiver", frame)
 
-        data_sequence = []
-    
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    except Exception as e:
+        ex_type, ex, tb = sus.exc_info()
+        logger.error(f"{e} {tb.tb_lineno}")
+        sus.exit()
