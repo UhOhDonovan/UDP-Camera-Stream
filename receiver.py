@@ -34,6 +34,7 @@ def receive(RECEIVER_IP, RECEIVER_PORT, CHUNK_SIZE, NUM_CHUNKS):
     sock.bind((RECEIVER_IP, RECEIVER_PORT))
 
     # dummy_chunk = np.zeros(CHUNK_SIZE, dtype=np.uint8)
+    iter = 0
     data_sequence = np.zeros(CHUNK_SIZE * NUM_CHUNKS, dtype=np.uint8)
     try:
         while True:
@@ -43,8 +44,12 @@ def receive(RECEIVER_IP, RECEIVER_PORT, CHUNK_SIZE, NUM_CHUNKS):
             data_sequence[
                 sequence_number * CHUNK_SIZE : (sequence_number + 1) * CHUNK_SIZE
             ] = np.frombuffer(frame_data, dtype=np.uint8)
-            frame = data_sequence.reshape(480, 640, 3)
-            cv2.imshow("receiver", frame)
+            iter += 1
+
+            if iter >= 7:
+                iter = 0
+                frame = data_sequence.reshape(480, 640, 3)
+                cv2.imshow("receiver", frame)
 
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break

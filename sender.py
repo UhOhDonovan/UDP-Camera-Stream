@@ -31,20 +31,24 @@ def send_to_receiver(RECEIVER_IP: str, RECEIVER_PORT: int):
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     cap = cv2.VideoCapture(0)  # Functionality for multiple devices needs to be implemented
+    i = -1
     try:
         while True:
-            _, frame = cap.read()
+            i += 1
+            i %= NUM_CHUNKS
+            if not i:
+                _, frame = cap.read()
             d = frame.flatten()
-            numbers = list(range(NUM_CHUNKS))
-            random.shuffle(numbers)
-            for i in numbers:
-                sequence_number = i.to_bytes(3, "big")
-                start_idx = i * CHUNK_SIZE
-                end_idx = (i + 1) * CHUNK_SIZE
-                chunk = d[start_idx:end_idx]
-                sock.sendto(sequence_number + chunk.tobytes(), (RECEIVER_IP, RECEIVER_PORT))
+            # numbers = list(range(NUM_CHUNKS))
+            # random.shuffle(numbers)
+            # for i in range(NUM_CHUNKS):
+            sequence_number = i.to_bytes(3, "big")
+            start_idx = i * CHUNK_SIZE
+            end_idx = (i + 1) * CHUNK_SIZE
+            chunk = d[start_idx:end_idx]
+            sock.sendto(sequence_number + chunk.tobytes(), (RECEIVER_IP, RECEIVER_PORT))
 
-            time.sleep(0.05)
+            time.sleep(0.002)
     finally:
         sock.close()
         cap.release()
