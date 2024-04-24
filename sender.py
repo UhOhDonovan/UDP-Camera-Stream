@@ -2,8 +2,15 @@ import socket
 import numpy as np
 import cv2
 import time
-import random
 import threading
+import logging
+import datetime
+logging.basicConfig(
+    filename=f"./tmp/{datetime.datetime.now()}-sender.log",
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s %(lineno)d %(message)s",
+)
+logger = logging.getLogger(__name__)
 
 # Specify IP information (Not sure if should be hardcoded or parsed)
 LISTENER_IP = "127.0.0.1"
@@ -11,8 +18,10 @@ LISTENER_PORT = 12000
 CHUNK_SIZE = 46080  # 576
 NUM_CHUNKS = 20  # 1600
 
+
 def listen(connection: socket.socket, addr: tuple[str, int]):
     try:
+        logger.info(f"Listening at {LISTENER_IP}:{LISTENER_PORT}")
         msg = connection.recv(1024)
         RECEIVER_IP, RECIEVER_PORT = msg.decode().split(",")
         response = f"OK"
@@ -20,17 +29,17 @@ def listen(connection: socket.socket, addr: tuple[str, int]):
         connection.close()
         send_to_receiver(RECEIVER_IP, int(RECIEVER_PORT))
     except Exception as e:
-        print(e)
+        logger.error(e)
     finally:
         connection.close()
-
-
 
 
 def send_to_receiver(RECEIVER_IP: str, RECEIVER_PORT: int):
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    cap = cv2.VideoCapture(0)  # Functionality for multiple devices needs to be implemented
+    cap = cv2.VideoCapture(
+        0
+    )  # Functionality for multiple devices needs to be implemented
     i = -1
     try:
         while True:
@@ -39,9 +48,6 @@ def send_to_receiver(RECEIVER_IP: str, RECEIVER_PORT: int):
             if not i:
                 _, frame = cap.read()
             d = frame.flatten()
-            # numbers = list(range(NUM_CHUNKS))
-            # random.shuffle(numbers)
-            # for i in range(NUM_CHUNKS):
             sequence_number = i.to_bytes(3, "big")
             start_idx = i * CHUNK_SIZE
             end_idx = (i + 1) * CHUNK_SIZE
@@ -53,25 +59,32 @@ def send_to_receiver(RECEIVER_IP: str, RECEIVER_PORT: int):
         sock.close()
         cap.release()
         cv2.destroyAllWindows()
-    
+
+
 def main():
     listener_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
     listener_socket.bind((LISTENER_IP, LISTENER_PORT))
     listener_socket.listen(2)
 
     threads = []
-    try: 
+    try:
         while True:
             connection, addr = listener_socket.accept()
-            
+
             new_thread = threading.Thread(target=listen, args=(connection, addr))
             new_thread.start()
 
             threads.append(new_thread)
+    except KeyboardInterrupt:
+        logger.info("Keyboard interrupt detected. Closing sockets...")
+        # Close all threads and sockets
+        for thread in threads:
+            thread.join()  # Wait for threads to finish
     except Exception as e:
-        print(e)
+        logger.error(e)
     finally:
         listener_socket.close()
+
 
 if __name__ == "__main__":
     main()
