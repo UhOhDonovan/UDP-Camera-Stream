@@ -5,7 +5,7 @@ import time
 import random
 import threading
 
-# Specify IP information
+# Specify IP information (Not sure if should be hardcoded or parsed)
 LISTENER_IP = "127.0.0.1"
 LISTENER_PORT = 12000
 CHUNK_SIZE = 46080  # 576
@@ -30,7 +30,7 @@ def listen(connection: socket.socket, addr: tuple[str, int]):
 def send_to_receiver(RECEIVER_IP: str, RECEIVER_PORT: int):
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    cap = cv2.VideoCapture(0)  # Capture video element
+    cap = cv2.VideoCapture(0)  # Functionality for multiple devices needs to be implemented
     try:
         while True:
             _, frame = cap.read()
