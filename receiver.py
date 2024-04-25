@@ -57,8 +57,8 @@ def receive(RECEIVER_IP, RECEIVER_PORT, CHUNK_SIZE, NUM_CHUNKS):
                 break
 
     except Exception as e:
-        ex_type, ex, tb = sus.exc_info()
-        logger.error(f"{e} {tb.tb_lineno}")
+        _, _, tb = sus.exc_info()
+        logger.error(f"LINE {tb.tb_lineno}: {e}")
     finally:
         sock.close()
 

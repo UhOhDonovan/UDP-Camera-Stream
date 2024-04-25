@@ -1,5 +1,4 @@
 import socket
-import numpy as np
 import cv2
 import time
 import threading
@@ -19,11 +18,11 @@ CHUNK_SIZE = 46080  # 576
 NUM_CHUNKS = 20  # 1600
 
 
-def listen(connection: socket.socket, addr: tuple[str, int]):
+def handle_connection(connection: socket.socket, addr: tuple[str, int]):
     try:
-        logger.info(f"Listening at {LISTENER_IP}:{LISTENER_PORT}")
         msg = connection.recv(1024)
         RECEIVER_IP, RECIEVER_PORT = msg.decode().split(",")
+        logger.info(f"Request received for {RECEIVER_IP}:{RECIEVER_PORT}")
         response = f"OK"
         connection.send(response.encode())
         connection.close()
@@ -35,7 +34,7 @@ def listen(connection: socket.socket, addr: tuple[str, int]):
 
 
 def send_to_receiver(RECEIVER_IP: str, RECEIVER_PORT: int):
-
+    logger.info(f"Opening UDP Socket to {RECEIVER_IP}:{RECEIVER_PORT}")
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     cap = cv2.VideoCapture(
         0
@@ -56,12 +55,14 @@ def send_to_receiver(RECEIVER_IP: str, RECEIVER_PORT: int):
 
             time.sleep(0.002)
     finally:
+        logger.info(f"Media stream terminated, closing video capture")
         sock.close()
         cap.release()
         cv2.destroyAllWindows()
 
 
 def main():
+    logger.info(f"Listening at {LISTENER_IP}:{LISTENER_PORT}")
     listener_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
     listener_socket.bind((LISTENER_IP, LISTENER_PORT))
     listener_socket.listen(2)
@@ -70,8 +71,9 @@ def main():
     try:
         while True:
             connection, addr = listener_socket.accept()
+            logger.info(f"Connection received from {addr}")
 
-            new_thread = threading.Thread(target=listen, args=(connection, addr))
+            new_thread = threading.Thread(target=handle_connection, args=(connection, addr))
             new_thread.start()
 
             threads.append(new_thread)
