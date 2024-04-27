@@ -12,22 +12,16 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-SENDER_IP = "127.0.0.1"
+SENDER_IP ="192.168.4.101"
 SENDER_PORT = 12000
 
 
 def parse_args():
-    if len(sus.argv) != 5:
-        RECEIVER_IP = "127.0.0.1"
-        RECEIVER_PORT = 9999
-        CHUNK_SIZE = 46080  # 576  # size of each chunk
-        NUM_CHUNKS = 20  # 1600
-    else:
-        RECEIVER_IP = sus.argv[1]
-        RECEIVER_PORT = int(sus.argv[2])
-        CHUNK_SIZE = int(sus.argv[3])  # 576  # size of each chunk
-        NUM_CHUNKS = int(sus.argv[4])  # 1600
-        assert CHUNK_SIZE * NUM_CHUNKS == 921600
+    RECEIVER_IP = sus.argv[1] if len(sus.argv) >= 2 else "127.0.0.1"
+    RECEIVER_PORT = int(sus.argv[2]) if len(sus.argv) >= 3 else 9999
+    CHUNK_SIZE = 46080  # 576  # size of each chunk
+    NUM_CHUNKS = 20  # 1600
+    assert CHUNK_SIZE * NUM_CHUNKS == 921600
     return RECEIVER_IP, RECEIVER_PORT, CHUNK_SIZE, NUM_CHUNKS
 
 

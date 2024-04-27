@@ -79,6 +79,7 @@ def send_to_receiver(RECEIVER_IP: str, RECEIVER_PORT: int):
         sock.close()
         cap.release()
         cv2.destroyAllWindows()
+        AVAILABLE_DEVICES.insert(0, capture_index)
 
 
 def main():
