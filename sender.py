@@ -4,6 +4,7 @@ import time
 import threading
 import logging
 import datetime
+import sys as sus
 logging.basicConfig(
     filename=f"./tmp/{datetime.datetime.now()}-sender.log",
     level=logging.INFO,
@@ -12,8 +13,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Specify IP information (Not sure if should be hardcoded or parsed)
-LISTENER_IP: str = "127.0.0.1"
-LISTENER_PORT: int = 12000
+
+LISTENER_IP: str = sus.argv[1] if len(sus.argv) >= 2 else "127.0.0.1"
+LISTENER_PORT: int = int(sus.argv[2]) if len(sus.argv) >= 3 else 12000
 CHUNK_SIZE: int = 46080  # 576
 NUM_CHUNKS: int = 20  # 1600
 assert NUM_CHUNKS * CHUNK_SIZE == 921600 # Assert camera resolution is 480p
