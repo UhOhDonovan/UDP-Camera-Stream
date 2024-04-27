@@ -25,7 +25,6 @@ def handle_connection(connection: socket.socket, addr: tuple[str, int]):
         logger.info(f"Request received for {RECEIVER_IP}:{RECIEVER_PORT}")
         response = f"OK"
         connection.send(response.encode())
-        connection.close()
         send_to_receiver(RECEIVER_IP, int(RECIEVER_PORT))
     except Exception as e:
         logger.error(e)

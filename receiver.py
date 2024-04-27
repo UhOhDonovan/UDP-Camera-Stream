@@ -70,13 +70,7 @@ def initiate_connection(RECEIVER_IP, RECEIVER_PORT, CHUNK_SIZE, NUM_CHUNKS):
         request = f"{RECEIVER_IP},{RECEIVER_PORT}"
         client_socket.send(request.encode())
 
-        data = b""
-        while True:
-            chunk = client_socket.recv(1024)
-            if not chunk:
-                break
-
-            data += chunk
+        data = client_socket.recv(1024)
 
         assert data.decode() == "OK"
         receive(RECEIVER_IP, RECEIVER_PORT, CHUNK_SIZE, NUM_CHUNKS)
