@@ -12,11 +12,29 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Specify IP information (Not sure if should be hardcoded or parsed)
-LISTENER_IP = "127.0.0.1"
-LISTENER_PORT = 12000
-CHUNK_SIZE = 46080  # 576
-NUM_CHUNKS = 20  # 1600
+LISTENER_IP: str = "127.0.0.1"
+LISTENER_PORT: int = 12000
+CHUNK_SIZE: int = 46080  # 576
+NUM_CHUNKS: int = 20  # 1600
+assert NUM_CHUNKS * CHUNK_SIZE == 921600 # Assert camera resolution is 480p
 
+def find_available_devices():
+    capture_indexes = []
+
+    for i in range(10):
+        cap = cv2.VideoCapture(i)
+        if cap.isOpened():
+            width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
+            height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
+            if (width, height) == (640, 480):
+                logger.info(f"Device found at index {i}")
+                capture_indexes.append(i)
+        cap.release()
+    
+    return capture_indexes
+
+AVAILABLE_DEVICES: list[int] = find_available_devices()
+logger.info(f"Available Devices: {AVAILABLE_DEVICES}")
 
 def handle_connection(connection: socket.socket, addr: tuple[str, int]):
     try:
@@ -35,8 +53,9 @@ def handle_connection(connection: socket.socket, addr: tuple[str, int]):
 def send_to_receiver(RECEIVER_IP: str, RECEIVER_PORT: int):
     logger.info(f"Opening UDP Socket to {RECEIVER_IP}:{RECEIVER_PORT}")
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    capture_index = AVAILABLE_DEVICES.pop()
     cap = cv2.VideoCapture(
-        0
+        capture_index
     )  # Functionality for multiple devices needs to be implemented
     i = -1
     try:
